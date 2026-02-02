@@ -227,6 +227,23 @@ audio files with:
 cargo run --example voicepack_gen
 ```
 
+#### Selection Order (Voice Packs)
+
+1. Extract a `summary` from the CLI payload (Claude/Codex). For OpenCode, pass
+   `--summary` to enable routing by message text.
+2. If `routes` are configured, scan in order and pick the first regex match
+   that also matches the current event (if `events` is set).
+3. If a route matches, select a random phrase from `route.phrases`. Otherwise,
+   fall back to `manifest.events[<event>]`.
+4. Select a random variant and play it. If playback fails, fall back to TTS
+   and then earcons.
+
+Enable debug logs to see which phrase/file was selected:
+
+```bash
+agent-chime -v notify --source opencode --event AGENT_YIELD --summary "Build complete"
+```
+
 ### TTS Backend Selection
 
 | Backend      | Best For                        | Voice Options                             |
