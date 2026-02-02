@@ -325,6 +325,8 @@ optionally `qwen3_tts.ref_text` to enable ICL-style cloning.
 Prereqs:
 
 - `cmake` (required by PocketTTS dependency)
+- `pre-commit` (for prek hooks)
+- `dprint` (for markdown formatting)
 
 ```bash
 # Debug build
@@ -344,6 +346,13 @@ cargo test
 
 # Run with logging
 RUST_LOG=debug cargo run -- system-info
+```
+
+### Prek Hooks
+
+```bash
+pre-commit install
+pre-commit run --all-files
 ```
 
 ## License
