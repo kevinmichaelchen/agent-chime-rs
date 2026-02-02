@@ -220,6 +220,13 @@ mapping in the manifest.
 If `voicepack.enabled` is true and a pack can be selected, playback happens
 before any TTS or earcon fallback.
 
+This repo ships a small dev voice pack under `./voicepack`. Regenerate the
+audio files with:
+
+```bash
+cargo run --example voicepack_gen
+```
+
 ### TTS Backend Selection
 
 | Backend      | Best For                        | Voice Options                             |

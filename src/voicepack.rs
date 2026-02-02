@@ -98,6 +98,11 @@ impl VoicePack {
         let phrase_key = phrase_keys.choose(&mut rng)?;
         let phrase = self.manifest.phrases.get(phrase_key)?;
         let variant = phrase.variants.choose(&mut rng)?;
+        tracing::debug!(
+            phrase_key = %phrase_key,
+            file = %variant.file,
+            "voicepack selected"
+        );
 
         let path = self.resolve_audio_path(&variant.file)?;
         fs::read(&path).ok()

@@ -16,6 +16,7 @@
 # Build artifacts
 *.wav
 !earcons/*.wav
+!voicepack/**/*.wav
 
 # Local config
 agent-chime.json

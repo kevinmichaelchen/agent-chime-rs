@@ -1,0 +1,233 @@
+{
+  "schema_version": "1.0",
+  "pack_id": "agent-chime.dev",
+  "display_name": "Agent Chime Dev Pack",
+  "description": "PocketTTS-generated prompts for local dogfooding.",
+  "locale": "en-US",
+  "provider": {
+    "name": "pocket-tts",
+    "model_id": "kyutai/pocket-tts",
+    "voice_name": "alba"
+  },
+  "output": {
+    "format": "wav",
+    "sample_rate_hz": 24000,
+    "bit_depth": 16,
+    "channels": 1
+  },
+  "events": {
+    "agent_yield": [
+      "agent_yield.ready",
+      "agent_yield.all_set",
+      "agent_yield.your_turn",
+      "agent_yield.next_step",
+      "agent_yield.done"
+    ],
+    "decision_required": [
+      "decision.input",
+      "decision.question",
+      "decision.call",
+      "decision.choose"
+    ],
+    "error_retry": [
+      "error.failed",
+      "error.hit",
+      "error.retry",
+      "error.timeout"
+    ]
+  },
+  "phrases": {
+    "agent_yield.ready": {
+      "text": "Ready.",
+      "variants": [
+        {
+          "file": "audio/agent_ready.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "agent_yield.all_set": {
+      "text": "All set.",
+      "variants": [
+        {
+          "file": "audio/agent_all_set.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "agent_yield.your_turn": {
+      "text": "Your turn.",
+      "variants": [
+        {
+          "file": "audio/agent_your_turn.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "agent_yield.next_step": {
+      "text": "Next step?",
+      "variants": [
+        {
+          "file": "audio/agent_next_step.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "agent_yield.done": {
+      "text": "I'm done.",
+      "variants": [
+        {
+          "file": "audio/agent_done.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "decision.input": {
+      "text": "I need your input.",
+      "variants": [
+        {
+          "file": "audio/decision_input.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "decision.question": {
+      "text": "Question for you.",
+      "variants": [
+        {
+          "file": "audio/decision_question.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "decision.call": {
+      "text": "Your call.",
+      "variants": [
+        {
+          "file": "audio/decision_call.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "decision.choose": {
+      "text": "Please choose.",
+      "variants": [
+        {
+          "file": "audio/decision_choose.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "error.failed": {
+      "text": "Something failed.",
+      "variants": [
+        {
+          "file": "audio/error_failed.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "error.hit": {
+      "text": "I hit an error.",
+      "variants": [
+        {
+          "file": "audio/error_hit.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "error.retry": {
+      "text": "Retry needed.",
+      "variants": [
+        {
+          "file": "audio/error_retry.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "error.timeout": {
+      "text": "That timed out.",
+      "variants": [
+        {
+          "file": "audio/error_timeout.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "pipeline.build_complete": {
+      "text": "Build complete.",
+      "variants": [
+        {
+          "file": "audio/build_complete.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "pipeline.tests_failed": {
+      "text": "Tests failed.",
+      "variants": [
+        {
+          "file": "audio/tests_failed.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    },
+    "pipeline.deploy_complete": {
+      "text": "Deploy complete.",
+      "variants": [
+        {
+          "file": "audio/deploy_complete.wav",
+          "format": "wav",
+          "sample_rate_hz": 24000,
+          "bit_depth": 16,
+          "channels": 1
+        }
+      ]
+    }
+  }
+}
