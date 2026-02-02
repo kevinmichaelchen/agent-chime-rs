@@ -1,0 +1,22 @@
+# Rust
+/target/
+Cargo.lock
+
+# IDE
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Build artifacts
+*.wav
+!earcons/*.wav
+
+# Test outputs
+/tmp/
