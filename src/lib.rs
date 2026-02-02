@@ -5,6 +5,7 @@ pub mod config;
 pub mod events;
 pub mod system;
 pub mod tts;
+pub mod voicepack;
 
 use anyhow::Context;
 use cli::{Cli, Commands};
@@ -35,6 +36,7 @@ fn setup_tracing(verbose: bool) {
 fn notify(args: cli::NotifyArgs) -> anyhow::Result<()> {
     let config = config::Config::load().context("load config")?;
 
+    let mut payload_text = args.payload.clone();
     let event_type = match args.event {
         Some(event) => Some(event),
         None => {
@@ -42,7 +44,10 @@ fn notify(args: cli::NotifyArgs) -> anyhow::Result<()> {
                 anyhow::bail!("--event is required when --source opencode is used");
             }
 
-            let payload = args.payload.or_else(read_stdin_json);
+            if payload_text.is_none() {
+                payload_text = read_stdin_json();
+            }
+            let payload = payload_text.clone();
             let payload = match payload {
                 Some(payload) => payload,
                 None => {
@@ -63,7 +68,21 @@ fn notify(args: cli::NotifyArgs) -> anyhow::Result<()> {
         }
     };
 
-    let event = Event::new(event_type, args.source);
+    let summary = args.summary.clone().or_else(|| {
+        payload_text
+            .as_deref()
+            .and_then(|payload| adapters::extract_summary(args.source, payload))
+    });
+
+    let event = Event::with_summary(event_type, args.source, summary);
+
+    if let Ok(Some(audio)) = voicepack::select_audio(&event, &config) {
+        if let Err(err) = tts::play_audio(&audio, config.volume) {
+            tracing::warn!(error = ?err, "voicepack playback failed; falling back");
+        } else {
+            return Ok(());
+        }
+    }
 
     let text = tts::broker::get_text_for_event(&event, &config);
 
@@ -110,7 +129,11 @@ fn models(args: cli::ModelsArgs) -> anyhow::Result<()> {
 
     println!("Available backends:");
     for backend in info.backends {
-        let status = if backend.available { "available" } else { "unavailable" };
+        let status = if backend.available {
+            "available"
+        } else {
+            "unavailable"
+        };
         println!("- {} ({})", backend.name, status);
     }
 
@@ -172,8 +195,7 @@ fn internal_synthesize(args: cli::InternalSynthesizeArgs) -> anyhow::Result<()> 
     if raw.is_empty() {
         anyhow::bail!("internal synth expects config JSON on stdin");
     }
-    let config: config::Config =
-        serde_json::from_slice(&raw).context("parse config JSON")?;
+    let config: config::Config = serde_json::from_slice(&raw).context("parse config JSON")?;
     let audio = tts::synthesize_in_process(&args.text, &config, &args.backend)?;
     let mut stdout = std::io::stdout();
     std::io::Write::write_all(&mut stdout, &audio).context("write audio to stdout")?;

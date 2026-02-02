@@ -22,6 +22,8 @@ pub struct Config {
     pub cache_max_entries: Option<usize>,
     #[serde(default)]
     pub earcons_dir: Option<PathBuf>,
+    #[serde(default)]
+    pub voicepack: VoicePackConfig,
 }
 
 #[derive(Debug, Clone, Serialize, Deserialize)]
@@ -42,14 +44,14 @@ pub struct TtsConfig {
     pub qwen3_tts: Qwen3TtsConfig,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct PocketTtsConfig {
     pub variant: Option<String>,
     pub voice: Option<String>,
     pub use_metal: Option<bool>,
 }
 
-#[derive(Debug, Clone, Serialize, Deserialize)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
 pub struct Qwen3TtsConfig {
     pub model: Option<String>,
     pub tokenizer: Option<String>,
@@ -70,18 +72,33 @@ pub struct EventConfig {
     pub template: Option<String>,
 }
 
-#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq)]
+#[derive(Debug, Clone, Serialize, Deserialize, Default)]
+pub struct VoicePackConfig {
+    #[serde(default)]
+    pub enabled: bool,
+    #[serde(default)]
+    pub manifest_path: Option<PathBuf>,
+    #[serde(default)]
+    pub routes: Vec<VoicePackRoute>,
+}
+
+#[derive(Debug, Clone, Serialize, Deserialize)]
+pub struct VoicePackRoute {
+    pub pattern: String,
+    pub phrases: Vec<String>,
+    #[serde(default)]
+    pub events: Vec<EventType>,
+    #[serde(default)]
+    pub case_sensitive: bool,
+}
+
+#[derive(Debug, Clone, Copy, Serialize, Deserialize, PartialEq, Eq, Default)]
 #[serde(rename_all = "lowercase")]
 pub enum Mode {
+    #[default]
     Tts,
     Earcon,
     Silent,
-}
-
-impl Default for Mode {
-    fn default() -> Self {
-        Mode::Tts
-    }
 }
 
 impl Config {
@@ -102,7 +119,8 @@ impl Config {
     }
 
     pub fn load_from_path(path: &Path) -> anyhow::Result<Self> {
-        let raw = fs::read_to_string(path).with_context(|| format!("read config at {}", path.display()))?;
+        let raw = fs::read_to_string(path)
+            .with_context(|| format!("read config at {}", path.display()))?;
         let mut config: Config = serde_json::from_str(&raw)
             .with_context(|| format!("parse config at {}", path.display()))?;
         config.apply_defaults();
@@ -121,10 +139,7 @@ impl Config {
 
     pub fn default_path() -> anyhow::Result<PathBuf> {
         let base = BaseDirs::new().context("unable to resolve home directory")?;
-        Ok(base
-            .config_dir()
-            .join("agent-chime")
-            .join("config.json"))
+        Ok(base.config_dir().join("agent-chime").join("config.json"))
     }
 
     pub fn default_cache_dir(&self) -> anyhow::Result<PathBuf> {
@@ -147,6 +162,19 @@ impl Config {
         }
 
         let local = PathBuf::from("earcons");
+        if local.exists() {
+            return Some(local);
+        }
+
+        None
+    }
+
+    pub fn voicepack_manifest_path(&self) -> Option<PathBuf> {
+        if let Some(path) = &self.voicepack.manifest_path {
+            return Some(path.clone());
+        }
+
+        let local = PathBuf::from("voicepack").join("manifest.json");
         if local.exists() {
             return Some(local);
         }
@@ -184,11 +212,25 @@ impl Config {
             }
         }
 
+        if self.voicepack.enabled {
+            if let Some(path) = self.voicepack_manifest_path() {
+                if !path.exists() {
+                    bail!("voicepack manifest not found: {}", path.display());
+                }
+            } else {
+                bail!("voicepack enabled but no manifest_path configured");
+            }
+        }
+
         Ok(())
     }
 
     fn apply_defaults(&mut self) {
-        for event_type in [EventType::AgentYield, EventType::DecisionRequired, EventType::ErrorRetry] {
+        for event_type in [
+            EventType::AgentYield,
+            EventType::DecisionRequired,
+            EventType::ErrorRetry,
+        ] {
             match self.events.get_mut(&event_type) {
                 Some(event_config) => {
                     if event_config.template.is_none() {
@@ -233,6 +275,10 @@ impl Config {
         if self.cache_max_entries.is_none() {
             self.cache_max_entries = Some(1000);
         }
+
+        if self.voicepack.routes.is_empty() {
+            self.voicepack.routes = Vec::new();
+        }
     }
 
     fn project_path() -> Option<PathBuf> {
@@ -243,12 +289,18 @@ impl Config {
 impl Default for Config {
     fn default() -> Self {
         let mut events = HashMap::new();
-        events.insert(EventType::AgentYield, EventConfig::default_for(EventType::AgentYield));
+        events.insert(
+            EventType::AgentYield,
+            EventConfig::default_for(EventType::AgentYield),
+        );
         events.insert(
             EventType::DecisionRequired,
             EventConfig::default_for(EventType::DecisionRequired),
         );
-        events.insert(EventType::ErrorRetry, EventConfig::default_for(EventType::ErrorRetry));
+        events.insert(
+            EventType::ErrorRetry,
+            EventConfig::default_for(EventType::ErrorRetry),
+        );
 
         Self {
             tts: TtsConfig::default(),
@@ -258,6 +310,7 @@ impl Default for Config {
             cache_max_mb: Some(100),
             cache_max_entries: Some(1000),
             earcons_dir: None,
+            voicepack: VoicePackConfig::default(),
         }
     }
 }
@@ -315,30 +368,6 @@ impl Default for TtsConfig {
                 ref_text: None,
                 device: Some("auto".to_string()),
             },
-        }
-    }
-}
-
-impl Default for PocketTtsConfig {
-    fn default() -> Self {
-        Self {
-            variant: None,
-            voice: None,
-            use_metal: None,
-        }
-    }
-}
-
-impl Default for Qwen3TtsConfig {
-    fn default() -> Self {
-        Self {
-            model: None,
-            tokenizer: None,
-            speaker: None,
-            language: None,
-            ref_audio: None,
-            ref_text: None,
-            device: None,
         }
     }
 }

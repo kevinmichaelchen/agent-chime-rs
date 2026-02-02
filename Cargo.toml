@@ -26,7 +26,10 @@ tempfile = "3"
 hound = "3"
 blake3 = "1"
 filetime = "0.2"
+regex = "1"
+rand = "0.8"
 candle-core = "0.9"
+voicepack-spec = { path = "../agent-chime-voicepack-spec/crates/spec" }
 pocket-tts = { git = "https://github.com/kevinmichaelchen/pocket-tts", package = "pocket-tts", default-features = false, optional = true }
 qwen3-tts = { git = "https://github.com/kevinmichaelchen/qwen3-tts-rs", package = "qwen3-tts", default-features = false, optional = true }
 

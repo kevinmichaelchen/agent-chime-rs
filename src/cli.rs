@@ -3,7 +3,11 @@ use clap::{Args, Parser, Subcommand};
 use crate::events::{EventType, Source};
 
 #[derive(Parser, Debug)]
-#[command(name = "agent-chime", version, about = "Audible notifications for agentic CLI workflows")]
+#[command(
+    name = "agent-chime",
+    version,
+    about = "Audible notifications for agentic CLI workflows"
+)]
 pub struct Cli {
     #[command(subcommand)]
     pub command: Commands,
@@ -36,6 +40,9 @@ pub struct NotifyArgs {
 
     #[arg(value_name = "JSON", help = "Event payload JSON (for claude/codex)")]
     pub payload: Option<String>,
+
+    #[arg(long, help = "Override summary/message text")]
+    pub summary: Option<String>,
 }
 
 #[derive(Args, Debug)]

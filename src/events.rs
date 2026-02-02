@@ -52,6 +52,10 @@ pub struct Event {
 
 impl Event {
     pub fn new(event_type: EventType, source: Source) -> Self {
+        Self::with_summary(event_type, source, None)
+    }
+
+    pub fn with_summary(event_type: EventType, source: Source, summary: Option<String>) -> Self {
         let priority = match event_type {
             EventType::DecisionRequired | EventType::ErrorRetry => Priority::High,
             EventType::AgentYield => Priority::Normal,
@@ -61,7 +65,7 @@ impl Event {
             event_type,
             source,
             timestamp: Utc::now(),
-            summary: None,
+            summary,
             context: None,
             priority,
         }

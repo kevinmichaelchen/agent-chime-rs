@@ -1,5 +1,5 @@
 use anyhow::Context;
-use filetime::{FileTime, set_file_mtime};
+use filetime::{set_file_mtime, FileTime};
 use std::fs;
 use std::path::{Path, PathBuf};
 

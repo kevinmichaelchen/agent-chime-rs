@@ -1,9 +1,9 @@
 #[cfg(feature = "pocket-tts-backend")]
 mod imp {
-    use anyhow::{Context, bail};
-    use pocket_tts::{ModelState, TTSModel};
+    use anyhow::{bail, Context};
     use pocket_tts::config::defaults;
     use pocket_tts::weights::download_if_necessary;
+    use pocket_tts::{ModelState, TTSModel};
     use std::collections::HashMap;
     use std::io::Cursor;
     use std::path::PathBuf;
@@ -120,17 +120,19 @@ mod imp {
         }
     }
 
+    impl Default for PocketTtsBackend {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl TtsBackend for PocketTtsBackend {
         fn name(&self) -> &str {
             "pocket-tts"
         }
 
         fn synthesize(&self, text: &str, config: &TtsConfig) -> anyhow::Result<Vec<u8>> {
-            let variant = config
-                .pocket_tts
-                .variant
-                .as_deref()
-                .unwrap_or("b6369a24");
+            let variant = config.pocket_tts.variant.as_deref().unwrap_or("b6369a24");
             let use_metal = config.pocket_tts.use_metal.unwrap_or(false);
             let model = Self::load_model(variant, use_metal, config.allow_downloads)?;
 
@@ -138,7 +140,8 @@ mod imp {
                 .voice
                 .as_deref()
                 .or(config.pocket_tts.voice.as_deref());
-            let voice_state = Self::resolve_voice_state(&model, voice_spec, config.allow_downloads)?;
+            let voice_state =
+                Self::resolve_voice_state(&model, voice_spec, config.allow_downloads)?;
 
             let audio = model.generate(text, &voice_state)?;
             let mut cursor = Cursor::new(Vec::new());
@@ -166,12 +169,23 @@ impl PocketTtsBackend {
 }
 
 #[cfg(not(feature = "pocket-tts-backend"))]
+impl Default for PocketTtsBackend {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(not(feature = "pocket-tts-backend"))]
 impl super::provider::TtsBackend for PocketTtsBackend {
     fn name(&self) -> &str {
         "pocket-tts"
     }
 
-    fn synthesize(&self, _text: &str, _config: &crate::config::TtsConfig) -> anyhow::Result<Vec<u8>> {
+    fn synthesize(
+        &self,
+        _text: &str,
+        _config: &crate::config::TtsConfig,
+    ) -> anyhow::Result<Vec<u8>> {
         anyhow::bail!("pocket-tts backend not enabled")
     }
 

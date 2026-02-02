@@ -1,6 +1,6 @@
 #[cfg(feature = "qwen3-tts-backend")]
 mod imp {
-    use anyhow::{Context, bail};
+    use anyhow::{bail, Context};
     use qwen3_tts::{AudioBuffer, Language, Qwen3TTS, Speaker};
     use std::cell::RefCell;
     use std::collections::HashMap;
@@ -92,11 +92,7 @@ mod imp {
         }
 
         fn parse_language(config: &TtsConfig) -> anyhow::Result<Language> {
-            let lang = config
-                .qwen3_tts
-                .language
-                .as_deref()
-                .unwrap_or("English");
+            let lang = config.qwen3_tts.language.as_deref().unwrap_or("English");
             Language::from_str(lang)
         }
 
@@ -129,6 +125,12 @@ mod imp {
         }
     }
 
+    impl Default for Qwen3TtsBackend {
+        fn default() -> Self {
+            Self::new()
+        }
+    }
+
     impl TtsBackend for Qwen3TtsBackend {
         fn name(&self) -> &str {
             "qwen3-tts"
@@ -141,11 +143,7 @@ mod imp {
                 .as_deref()
                 .context("qwen3-tts requires tts.qwen3_tts.model")?;
             let tokenizer_id = config.qwen3_tts.tokenizer.as_deref();
-            let device = config
-                .qwen3_tts
-                .device
-                .as_deref()
-                .unwrap_or("auto");
+            let device = config.qwen3_tts.device.as_deref().unwrap_or("auto");
 
             let model = Self::load_model(model_id, tokenizer_id, device, config.allow_downloads)?;
             let language = Self::parse_language(config)?;
@@ -157,7 +155,8 @@ mod imp {
             } else if let Some(ref_audio_path) = config.qwen3_tts.ref_audio.as_deref() {
                 let ref_audio = AudioBuffer::load(ref_audio_path)
                     .with_context(|| format!("load ref audio {ref_audio_path}"))?;
-                let prompt = model.create_voice_clone_prompt(&ref_audio, config.qwen3_tts.ref_text.as_deref())?;
+                let prompt = model
+                    .create_voice_clone_prompt(&ref_audio, config.qwen3_tts.ref_text.as_deref())?;
                 model
                     .synthesize_voice_clone(text, &prompt, language, None)
                     .context("synthesize voice clone")?
@@ -191,12 +190,23 @@ impl Qwen3TtsBackend {
 }
 
 #[cfg(not(feature = "qwen3-tts-backend"))]
+impl Default for Qwen3TtsBackend {
+    fn default() -> Self {
+        Self::new()
+    }
+}
+
+#[cfg(not(feature = "qwen3-tts-backend"))]
 impl super::provider::TtsBackend for Qwen3TtsBackend {
     fn name(&self) -> &str {
         "qwen3-tts"
     }
 
-    fn synthesize(&self, _text: &str, _config: &crate::config::TtsConfig) -> anyhow::Result<Vec<u8>> {
+    fn synthesize(
+        &self,
+        _text: &str,
+        _config: &crate::config::TtsConfig,
+    ) -> anyhow::Result<Vec<u8>> {
         anyhow::bail!("qwen3-tts backend not enabled")
     }
 

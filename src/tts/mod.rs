@@ -160,18 +160,21 @@ pub fn models_info() -> anyhow::Result<ModelsInfo> {
     let config = Config::load()?;
     let cache_dir = config.default_cache_dir().ok();
 
-    let mut backends = Vec::new();
-    backends.push(BackendInfo {
-        name: "pocket-tts".to_string(),
-        available: true,
-        supports_instruct: false,
-    });
+    let backends = vec![
+        BackendInfo {
+            name: "pocket-tts".to_string(),
+            available: true,
+            supports_instruct: false,
+        },
+        BackendInfo {
+            name: "qwen3-tts".to_string(),
+            available: cfg!(feature = "qwen3-tts-backend"),
+            supports_instruct: true,
+        },
+    ];
 
-    backends.push(BackendInfo {
-        name: "qwen3-tts".to_string(),
-        available: cfg!(feature = "qwen3-tts-backend"),
-        supports_instruct: true,
-    });
-
-    Ok(ModelsInfo { backends, cache_dir })
+    Ok(ModelsInfo {
+        backends,
+        cache_dir,
+    })
 }

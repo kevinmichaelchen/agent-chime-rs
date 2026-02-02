@@ -79,6 +79,13 @@ for faster startup, single-binary distribution, and lower memory usage.
 - **FR-8.2**: Config file format compatible with Python version.
 - **FR-8.3**: Same hook commands work for both implementations.
 
+### 2.9 Voice Packs
+
+- **FR-9.1**: Support pre-generated voice packs via a manifest file.
+- **FR-9.2**: Select audio variants based on event type and optional
+  message-based routing rules.
+- **FR-9.3**: If voice pack playback fails, fall back to TTS or earcons.
+
 ## 3. Non-Functional Requirements
 
 ### 3.1 Performance

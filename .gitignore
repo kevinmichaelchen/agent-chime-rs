@@ -1,6 +1,5 @@
 # Rust
 /target/
-Cargo.lock
 
 # IDE
 .idea/
@@ -17,6 +16,9 @@ Cargo.lock
 # Build artifacts
 *.wav
 !earcons/*.wav
+
+# Local config
+agent-chime.json
 
 # Test outputs
 /tmp/

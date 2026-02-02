@@ -315,6 +315,7 @@ pub struct Config {
     pub cache_max_mb: Option<u64>,
     pub cache_max_entries: Option<usize>,
     pub earcons_dir: Option<PathBuf>,
+    pub voicepack: VoicePackConfig,
 }
 
 #[derive(Deserialize, Serialize)]
@@ -350,7 +351,22 @@ pub struct Qwen3TtsConfig {
 pub struct EventConfig {
     pub enabled: bool,
     pub mode: Mode,  // "tts" | "earcon" | "silent"
-    pub template: String,
+    pub template: Option<String>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct VoicePackConfig {
+    pub enabled: bool,
+    pub manifest_path: Option<PathBuf>,
+    pub routes: Vec<VoicePackRoute>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct VoicePackRoute {
+    pub pattern: String,           // regex applied to last message
+    pub phrases: Vec<String>,      // phrase keys in the manifest
+    pub events: Vec<EventType>,    // optional event filter
+    pub case_sensitive: bool,
 }
 ```
 
@@ -390,6 +406,7 @@ Options:
   --source <SOURCE>  Source CLI [claude|codex|opencode]
   --event <EVENT>    Explicit event type [AGENT_YIELD|DECISION_REQUIRED|ERROR_RETRY]
   --backend <NAME>   Override TTS backend
+  --summary <TEXT>   Override summary/message text (used for voicepack routing)
 ```
 
 ### 9.3 Test-TTS Command

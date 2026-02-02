@@ -141,6 +141,7 @@ agent-chime config --validate   # Validate configuration
 agent-chime notify --source claude    # Reads JSON from stdin
 agent-chime notify --source codex     # Reads JSON from argv
 agent-chime notify --source opencode --event AGENT_YIELD
+agent-chime notify --source opencode --event AGENT_YIELD --summary "Build complete"
 ```
 
 ### Configuration
@@ -173,6 +174,17 @@ Create `~/.config/agent-chime/config.json`:
   "volume": 0.8,
   "cache_max_mb": 100,
   "cache_max_entries": 1000,
+  "voicepack": {
+    "enabled": false,
+    "manifest_path": "./voicepack/manifest.json",
+    "routes": [
+      {
+        "pattern": "error|failed|timeout",
+        "phrases": ["system.timeout_fallback"],
+        "events": ["ERROR_RETRY"]
+      }
+    ]
+  },
   "events": {
     "AGENT_YIELD": {
       "enabled": true,
@@ -196,6 +208,17 @@ Audio is cached on disk (LRU by modification time) to speed up repeated prompts.
 Tune `cache_max_mb` and `cache_max_entries` to fit your system. If synthesis
 exceeds `tts.timeout_seconds`, the process is terminated and earcons are used
 instead. Set `timeout_seconds` to `0` to disable the circuit breaker.
+
+### Voice Packs (Pre-Generated Audio)
+
+Enable `voicepack.enabled` to play pre-generated audio files instead of doing
+on-device TTS. `manifest_path` should point at a voice pack manifest (see
+`agent-chime-voicepack-spec`). When `routes` match the last message, agent-chime
+will choose a phrase from those keys; otherwise it falls back to the event
+mapping in the manifest.
+
+If `voicepack.enabled` is true and a pack can be selected, playback happens
+before any TTS or earcon fallback.
 
 ### TTS Backend Selection
 
