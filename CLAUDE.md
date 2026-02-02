@@ -17,6 +17,8 @@ notifications in agentic CLI workflows.
 ## Build Commands
 
 ```bash
+# Prereq: cmake (needed for sentencepiece via PocketTTS)
+
 # Build
 cargo build
 cargo build --release

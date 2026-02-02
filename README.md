@@ -35,20 +35,18 @@ When your agent yields or asks for a decision, you hear a short, clear audio cue
 
 ## TTS Backends
 
-We use pure Rust TTS implementations built on
+We integrate community Rust ports built on
 [Candle](https://github.com/huggingface/candle):
 
-| Backend                                                 | Model          | Speed        | Use Case                         |
-| ------------------------------------------------------- | -------------- | ------------ | -------------------------------- |
-| [pocket-tts](https://github.com/babybirdprd/pocket-tts) | PocketTTS 0.5B | ~0.3x RT     | Default — fast, CPU-friendly     |
-| [qwen3-tts-rs](https://github.com/TrevorS/qwen3-tts-rs) | Qwen3-TTS 1.7B | ~0.5-0.7x RT | VoiceDesign with emotion control |
+| Backend                                                          | Model Class         | Speed        | Use Case                              |
+| ---------------------------------------------------------------- | ------------------- | ------------ | ------------------------------------- |
+| [pocket-tts](https://github.com/kevinmichaelchen/pocket-tts)     | PocketTTS 0.5B      | ~0.3x RT     | Default — fast, CPU-friendly          |
+| [qwen3-tts-rs](https://github.com/kevinmichaelchen/qwen3-tts-rs) | Qwen3-TTS 0.6B/1.7B | ~0.5-0.7x RT | VoiceDesign and higher‑quality voices |
 
-Both support:
-
-- CPU inference (no GPU required)
-- Optional Metal acceleration on macOS
-- Streaming synthesis for low latency
-- Voice cloning
+Both are local-first and support CPU inference. Qwen3-TTS is heavy; CPU-only
+runs are not recommended (expect high latency). Prefer Metal/CUDA acceleration
+and build with `--features metal`. Repeated prompts are cached, so common event
+phrases become near-instant after the first run.
 
 ## Quick Start
 
@@ -78,10 +76,16 @@ Add to `~/.claude/settings.json`:
     ],
     "Notification": [
       { "type": "command", "command": "agent-chime notify --source claude" }
+    ],
+    "PreToolUse": [
+      { "type": "command", "command": "agent-chime notify --source claude" }
     ]
   }
 }
 ```
+
+Note: `PreToolUse` is only used for `AskUserQuestion` events; configure your
+Claude hooks to forward those to `agent-chime` so decision prompts are audible.
 
 #### Codex
 
@@ -148,9 +152,27 @@ Create `~/.config/agent-chime/config.json`:
   "tts": {
     "backend": "pocket-tts",
     "voice": null,
-    "instruct": null
+    "instruct": null,
+    "timeout_seconds": 10,
+    "allow_downloads": true,
+    "pocket_tts": {
+      "variant": "b6369a24",
+      "voice": "alba",
+      "use_metal": false
+    },
+    "qwen3_tts": {
+      "model": null,
+      "tokenizer": null,
+      "speaker": "Ryan",
+      "language": "English",
+      "ref_audio": null,
+      "ref_text": null,
+      "device": "auto"
+    }
   },
   "volume": 0.8,
+  "cache_max_mb": 100,
+  "cache_max_entries": 1000,
   "events": {
     "AGENT_YIELD": {
       "enabled": true,
@@ -170,14 +192,19 @@ Create `~/.config/agent-chime/config.json`:
 }
 ```
 
+Audio is cached on disk (LRU by modification time) to speed up repeated prompts.
+Tune `cache_max_mb` and `cache_max_entries` to fit your system. If synthesis
+exceeds `tts.timeout_seconds`, the process is terminated and earcons are used
+instead. Set `timeout_seconds` to `0` to disable the circuit breaker.
+
 ### TTS Backend Selection
 
-| Backend      | Best For                        | Emotion Control        |
-| ------------ | ------------------------------- | ---------------------- |
-| `pocket-tts` | Fast notifications, low memory  | No                     |
-| `qwen3-tts`  | High quality, expressive speech | Yes (via `--instruct`) |
+| Backend      | Best For                        | Voice Options                             |
+| ------------ | ------------------------------- | ----------------------------------------- |
+| `pocket-tts` | Fast notifications, low memory  | Predefined voices (e.g. `alba`)           |
+| `qwen3-tts`  | High quality, expressive speech | Speakers, voice cloning, VoiceDesign text |
 
-For emotion-controlled speech with Qwen3-TTS:
+For VoiceDesign speech with Qwen3-TTS:
 
 ```bash
 agent-chime test-tts \
@@ -185,6 +212,36 @@ agent-chime test-tts \
   --text "I need your input on this decision." \
   --instruct "A calm, professional voice with slight urgency"
 ```
+
+### Model Downloads
+
+Both backends can download model assets from Hugging Face when `allow_downloads`
+is `true`. Set it to `false` if you require fully offline operation and provide
+local paths for `qwen3_tts.model` (and optional `qwen3_tts.tokenizer`) and
+`pocket_tts.voice` where needed. If the model repo requires authentication, set
+`HF_TOKEN` in your environment.
+
+### Qwen3-TTS Setup (Optional)
+
+To use Qwen3-TTS, point `tts.qwen3_tts.model` at a local model directory or a
+Hugging Face model ID:
+
+```json
+{
+  "tts": {
+    "backend": "qwen3-tts",
+    "allow_downloads": true,
+    "qwen3_tts": {
+      "model": "Qwen/Qwen3-TTS-12Hz-0.6B-CustomVoice",
+      "speaker": "Ryan",
+      "language": "English"
+    }
+  }
+}
+```
+
+For Base models that support voice cloning, set `qwen3_tts.ref_audio` (WAV) and
+optionally `qwen3_tts.ref_text` to enable ICL-style cloning.
 
 ## Event Types
 
@@ -218,6 +275,10 @@ agent-chime test-tts \
 
 ## Building
 
+Prereqs:
+
+- `cmake` (required by PocketTTS dependency)
+
 ```bash
 # Debug build
 cargo build
@@ -227,6 +288,9 @@ cargo build --release
 
 # With Metal acceleration (macOS)
 cargo build --release --features metal
+
+# Minimal build (disable heavy TTS backends)
+cargo build --release --no-default-features
 
 # Run tests
 cargo test

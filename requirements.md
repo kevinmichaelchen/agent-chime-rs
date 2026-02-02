@@ -37,6 +37,8 @@ for faster startup, single-binary distribution, and lower memory usage.
 - **FR-3.5**: Support streaming synthesis for low first-audio latency.
 - **FR-3.6**: Support emotion/style control via `instruct` parameter
   (Qwen3-TTS).
+- **FR-3.7**: Allow optional model downloads when explicitly enabled; support
+  local model paths for offline use.
 
 ### 2.4 Audio Rendering
 
@@ -93,12 +95,16 @@ for faster startup, single-binary distribution, and lower memory usage.
 - **NFR-2.2**: Errors must never block agent output.
 - **NFR-2.3**: Graceful degradation: TTS → Earcon → Silent → Continue.
 - **NFR-2.4**: Log warnings on failures but do not exit with error.
+- **NFR-2.5**: Enforce a synthesis circuit breaker (default 10s) that aborts
+  long-running TTS and falls back to earcons.
 
 ### 3.3 Privacy
 
 - **NFR-3.1**: All TTS runs locally on-device.
-- **NFR-3.2**: No network requests for audio synthesis.
+- **NFR-3.2**: No network requests for audio synthesis (downloads only for model
+  assets).
 - **NFR-3.3**: No telemetry or analytics.
+- **NFR-3.4**: Model asset downloads must be opt-in and configurable.
 
 ### 3.4 Portability
 
@@ -143,10 +149,10 @@ for faster startup, single-binary distribution, and lower memory usage.
 
 ### 5.2 TTS Backends
 
-| Crate        | Repository             | Models              |
-| ------------ | ---------------------- | ------------------- |
-| `pocket-tts` | babybirdprd/pocket-tts | PocketTTS 0.5B      |
-| `qwen3-tts`  | TrevorS/qwen3-tts-rs   | Qwen3-TTS 0.6B/1.7B |
+| Crate        | Repository                    | Models              |
+| ------------ | ----------------------------- | ------------------- |
+| `pocket-tts` | kevinmichaelchen/pocket-tts   | PocketTTS 0.5B      |
+| `qwen3-tts`  | kevinmichaelchen/qwen3-tts-rs | Qwen3-TTS 0.6B/1.7B |
 
 ## 6. Acceptance Criteria
 

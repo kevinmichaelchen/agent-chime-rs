@@ -1,0 +1,35 @@
+[package]
+name = "agent-chime"
+version = "0.1.0"
+edition = "2021"
+description = "Audible notifications for agentic CLI workflows on macOS"
+license = "MIT"
+
+[features]
+default = ["pocket-tts-backend", "qwen3-tts-backend", "hub"]
+pocket-tts-backend = ["dep:pocket-tts"]
+qwen3-tts-backend = ["dep:qwen3-tts"]
+metal = ["pocket-tts/metal", "qwen3-tts/metal"]
+hub = ["qwen3-tts/hub"]
+
+[dependencies]
+clap = { version = "4.5", features = ["derive"] }
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+anyhow = "1"
+thiserror = "2"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["env-filter"] }
+chrono = { version = "0.4", features = ["serde"] }
+directories = "5"
+tempfile = "3"
+hound = "3"
+blake3 = "1"
+filetime = "0.2"
+candle-core = "0.9"
+pocket-tts = { git = "https://github.com/kevinmichaelchen/pocket-tts", package = "pocket-tts", default-features = false, optional = true }
+qwen3-tts = { git = "https://github.com/kevinmichaelchen/qwen3-tts-rs", package = "qwen3-tts", default-features = false, optional = true }
+
+[dev-dependencies]
+assert_cmd = "2"
+predicates = "3"

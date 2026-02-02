@@ -312,6 +312,8 @@ pub struct Config {
     pub volume: f32,
     pub events: HashMap<EventType, EventConfig>,
     pub cache_dir: Option<PathBuf>,
+    pub cache_max_mb: Option<u64>,
+    pub cache_max_entries: Option<usize>,
     pub earcons_dir: Option<PathBuf>,
 }
 
@@ -320,6 +322,28 @@ pub struct TtsConfig {
     pub backend: Option<String>,  // "pocket-tts" | "qwen3-tts"
     pub voice: Option<String>,
     pub instruct: Option<String>, // For qwen3-tts VoiceDesign
+    pub timeout_seconds: u64,     // Circuit breaker for synthesis
+    pub allow_downloads: bool,
+    pub pocket_tts: PocketTtsConfig,
+    pub qwen3_tts: Qwen3TtsConfig,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct PocketTtsConfig {
+    pub variant: Option<String>,  // e.g. "b6369a24"
+    pub voice: Option<String>,    // e.g. "alba" or path
+    pub use_metal: Option<bool>,
+}
+
+#[derive(Deserialize, Serialize)]
+pub struct Qwen3TtsConfig {
+    pub model: Option<String>,     // local path or HF ID
+    pub tokenizer: Option<String>, // local path or HF ID
+    pub speaker: Option<String>,   // e.g. "Ryan"
+    pub language: Option<String>,  // e.g. "English"
+    pub ref_audio: Option<String>, // voice clone WAV
+    pub ref_text: Option<String>,  // reference transcript
+    pub device: Option<String>,    // "auto" | "cpu" | "metal" | "cuda:0"
 }
 
 #[derive(Deserialize, Serialize)]
@@ -345,10 +369,10 @@ agent-chime <COMMAND>
 
 Commands:
   notify       Process a notification event
-  system-info  Show system information
-  models       List available TTS backends and models
+  system-info  Show system information (--json supported)
+  models       List available TTS backends and models (--json supported)
   test-tts     Test TTS synthesis
-  config       Manage configuration
+  config       Manage configuration (--show/--init/--validate)
   help         Print help
 
 Global Options:
@@ -436,9 +460,9 @@ clap = { version = "4", features = ["derive"] }
 serde = { version = "1", features = ["derive"] }
 serde_json = "1"
 
-# TTS backends
-pocket-tts = { git = "https://github.com/babybirdprd/pocket-tts" }
-# qwen3-tts = { git = "https://github.com/TrevorS/qwen3-tts-rs", optional = true }
+# TTS backends (community Rust ports)
+pocket-tts = { git = "https://github.com/kevinmichaelchen/pocket-tts" }
+qwen3-tts = { git = "https://github.com/kevinmichaelchen/qwen3-tts-rs", optional = true }
 
 # Audio
 hound = "3"  # WAV I/O
@@ -456,10 +480,11 @@ directories = "5"  # XDG paths
 
 ```toml
 [features]
-default = ["pocket-tts"]
-metal = ["pocket-tts/metal"]
-qwen3-tts = ["dep:qwen3-tts"]
-cuda = ["qwen3-tts/cuda"]
+default = ["pocket-tts-backend", "qwen3-tts-backend", "hub"]
+pocket-tts-backend = ["dep:pocket-tts"]
+qwen3-tts-backend = ["dep:qwen3-tts"]
+metal = ["pocket-tts/metal", "qwen3-tts/metal"]
+hub = ["qwen3-tts/hub"]
 ```
 
 ## 12. Error Handling
